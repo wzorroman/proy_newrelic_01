@@ -1,45 +1,30 @@
 import os
-from datetime import timedelta
+from pydantic_settings import BaseSettings
+from typing import Optional
 
-class Config:
-    """Base configuration"""
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
-    DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
-    TESTING = False
-    
+class Settings(BaseSettings):
+    """Application settings"""
+    # FastAPI Configuration
+    fastapi_env: str = os.getenv("FASTAPI_ENV", "development")
+    fastapi_debug: bool = os.getenv("FASTAPI_DEBUG", "True").lower() == "true"
+    fastapi_host: str = os.getenv("FASTAPI_HOST", "0.0.0.0")
+    fastapi_port: int = int(os.getenv("FASTAPI_PORT", "8000"))
+
     # NewRelic Configuration
-    NEW_RELIC_LICENSE_KEY = os.getenv('NEW_RELIC_LICENSE_KEY')
-    NEW_RELIC_APP_NAME = os.getenv('NEW_RELIC_APP_NAME', 'Flask Demo App')
-    
+    new_relic_license_key: Optional[str] = os.getenv("NEW_RELIC_LICENSE_KEY")
+    new_relic_app_name: str = os.getenv("NEW_RELIC_APP_NAME", "FastAPI Demo App")
+
     # Database Configuration
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///app.db')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
-    # API Configuration
-    JSON_SORT_KEYS = False
+    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
-class DevelopmentConfig(Config):
-    """Development configuration"""
-    DEBUG = True
-    TESTING = False
+    # Application Configuration
+    secret_key: str = os.getenv("SECRET_KEY", "dev-secret-key")
+    api_v1_prefix: str = os.getenv("API_V1_PREFIX", "/api/v1")
+    project_name: str = os.getenv("PROJECT_NAME", "FastAPI NewRelic Demo")
+    project_version: str = os.getenv("PROJECT_VERSION", "1.0.0")
 
-class ProductionConfig(Config):
-    """Production configuration"""
-    DEBUG = False
-    TESTING = False
+    class Config:
+        env_file = ".env"
+        extra = "allow"
 
-class TestingConfig(Config):
-    """Testing configuration"""
-    TESTING = True
-    DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-
-def get_config():
-    """Get appropriate config based on environment"""
-    env = os.getenv('FLASK_ENV', 'development')
-    configs = {
-        'development': DevelopmentConfig,
-        'production': ProductionConfig,
-        'testing': TestingConfig
-    }
-    return configs.get(env, DevelopmentConfig)
+settings = Settings()

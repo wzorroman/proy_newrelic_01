@@ -1,23 +1,33 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, func
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from app.config.config import settings
 
-class Base(DeclarativeBase):
-    pass
+# Database configuration
+engine = create_engine(
+    settings.database_url,
+    connect_args={"check_same_thread": False} if "sqlite" in settings.database_url else {}
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-db = SQLAlchemy(model_class=Base)
+Base = declarative_base()
 
-class User(db.Model):
-    __tablename__ = 'users'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
+class User(Base):
+    __tablename__ = "users"
 
-def init_db(app):
-    """Initialize database with app"""
-    db.init_app(app)
-    
-    with app.app_context():
-        db.create_all()
-        
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(80), unique=True, index=True, nullable=False)
+    email = Column(String(120), unique=True, index=True, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def init_db():
+    """Initialize database tables"""
+    Base.metadata.create_all(bind=engine)

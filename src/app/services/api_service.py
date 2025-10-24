@@ -1,4 +1,5 @@
 import requests
+import time
 from app.utils.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -7,7 +8,7 @@ class ApiService:
     """Service layer for API operations"""
 
     @staticmethod
-    def get_external_data():
+    async def get_external_data():
         """Simulate external API call"""
         try:
             # Simulate API call
@@ -19,7 +20,7 @@ class ApiService:
             return {"error": "External service unavailable"}
 
     @staticmethod
-    def process_data(data):
+    async def process_data(data):
         """Process data with business logic"""
         if isinstance(data, dict) and 'title' in data:
             data['processed'] = True
@@ -27,10 +28,17 @@ class ApiService:
         return data
 
     @staticmethod
-    def create_user_data(username, email):
+    async def create_user_data(username: str, email: str):
         """Create user data structure"""
         return {
             "username": username,
             "email": email,
             "status": "active"
         }
+
+    @staticmethod
+    async def simulate_slow_operation():
+        """Simulate slow operation"""
+        start_time = time.time()
+        time.sleep(2)  # Simulate processing
+        return time.time() - start_time
